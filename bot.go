@@ -2,6 +2,7 @@ package main
 import (
   "github.com/Syfaro/telegram-bot-api"
   "log"
+	"fmt"
 )
 
 func main() {
@@ -24,6 +25,10 @@ func main() {
 	for {
 		select {
 		case update := <-updates:
+			if update.Message == nil {
+				continue
+			}
+
 			// Пользователь, который написал боту
 			UserName := update.Message.From.UserName
 
@@ -38,11 +43,25 @@ func main() {
 			log.Printf("[%s] %d %s", UserName, ChatID, Text)
 
 			// Ответим пользователю его же сообщением
-			reply := Text
-			// Созадаем сообщение
-			msg := tgbotapi.NewMessage(ChatID, reply)
-			// и отправляем его
-			bot.Send(msg)
+			var reply string
+
+			if update.Message.NewChatMember  != nil {
+				// В чат вошел новый пользователь
+				// Поприветствуем его
+				reply = fmt.Sprintf(`Hi @%s! Bee good.`,
+					update.Message.NewChatMember.UserName)
+			} else {
+				reply = fmt.Sprintf(`YoHoHo @%s! %s.`,
+					UserName, Text)
+			}
+
+
+			if reply != "" {
+				// Созадаем сообщение
+				msg := tgbotapi.NewMessage(ChatID, reply)
+				// и отправляем его
+				bot.Send(msg)
+			}
 		}
 
 	}
